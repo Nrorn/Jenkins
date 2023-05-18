@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#trap 'echo "# $BASH_COMMAND";read' DEBUG
+
+sudo apt-get update
+echo $gatz
+# Получаем последнюю версию пакета из репозитория
+repo_head_comp=$(apt-cache show $gatz | grep Version | awk '{print $2}' | grep -E .*-b[0-9] | head -1); echo $repo_head_comp;
+# Установка компанента
+sudo  apt-get install -y $gatz 2>&1 | tee -a ./info_about_inst_comp;
+
+# Получаем установленную версию пакета 
+loc_inst_comp=$(dpkg -l $gatz | grep  ii | awk '{print $3}');echo $loc_inst_comp
+
+
+# Проверяем, установлен ли пакет
+if [ -z "$loc_inst_comp" ]; then
+    echo "Компонент $gatz не установлен" >> ./info_about_inst_comp
+else
+    # Сравниваем версии и выводим результат
+    if [ "$repo_head_comp" == "$loc_inst_comp" ]; then
+        echo "Установлена последняя версия $gatz: $loc_inst_comp" >> ./info_about_inst_comp
+    else
+        echo "Установлена устаревшая версия $gatz: $loc_inst_comp. Последняя версия: $repo_head_comp" >> ./info_about_inst_comp
+    fi
+fi
+
+#`exit `

@@ -1,0 +1,26 @@
+#!/bin/bash
+#trap 'echo "# $BASH_COMMAND";read' DEBUG
+touch ./components_list
+ssh e.sermyagin@192.168.55.245 'ls -d /git/components/*/ | xargs basename -a'  > ./components_list ;
+#trap 'echo "# $BASH_COMMAND";read' DEBUG
+echo "" >  ./info_about_inst_comp
+# Количество компанент в файле ./components_list
+j=$(grep -c $ ./components_list )
+echo $j
+for ((i = 1; i<=$j; i++))
+do
+cmpnnts=$(cat ./components_list| head -n $i| tail  -n 1)
+echo $cmpnnts
+# Подпакеты, компанента которого можно установить
+z=$(apt-cache show $cmpnnts* | grep Package: | uniq | awk '{print $2}' | wc -l)
+echo $z 
+    for ((x = 1; x<=$z; x++))
+    do
+        gatz=$(apt-cache show $cmpnnts* | grep Package: | uniq | awk '{print $2}'| head -n $x| tail  -n 1)
+        echo $gatz
+        sudo docker run --privileged --rm -it --shm-size=10g --cap-add=ALL -e gatz=$gatz -v /home/esermyagin/Desktop/123/script/Jenkins:/home/g10/serm  -w /home/g10/serm 192.168.55.242:443/20.04_amd64_git ./checking_the_installing_components
+    done
+done
+cat ./info_about_inst_comp | grep Установлена
+cat ./info_about_inst_comp | grep  -i -E --line-buffered 'не установлен| depend' | grep -v "Building dependency "| grep  -v "Considering dependency proxy"
+sudo rm ./components_list
